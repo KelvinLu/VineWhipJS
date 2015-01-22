@@ -26,19 +26,11 @@ var VineWhip = {};
         for (key in ext) if (ext.hasOwnProperty(key)) obj[key] = ext[key];
     };
 
-    VineWhip.newUid = function(tag) {
-        while (VineWhip.newUid.prototype.uidHashes.hasOwnProperty(uid = tag +  Math.floor(Math.random() * 1000000).toString()));
-        VineWhip.newUid.prototype.uidHashes[uid] = true;
-        return uid;
-    };
-
-    VineWhip.newUid.prototype.uidHashes = {};
 
 
     VineWhip.Model = function(o) {
         // Defining model fields
         VineWhip.assertType(o, Object);
-        VineWhip.assertProperty(o, 'defaults');
 
         // Create Model constructor
         Model = function(fields) {
@@ -51,10 +43,9 @@ var VineWhip = {};
         Model.prototype = Object.create(VineWhip.Model.prototype);
 
         // Define model defaults
-        Model.prototype._defaults = o.defaults;
+        Model.prototype._defaults = o.defaults || Object.prototype;
 
-        // Give Model type a unique id
-        Model.prototype._typeUid = VineWhip.newUid('Model');
+        Model.prototype._modelCtor = Model;
 
         return Model;
     };
@@ -78,21 +69,27 @@ var VineWhip = {};
     
         // Create View constructor
         View = function(model) {
-            this.checkModelType(model);
-            this.model = model;
+            this.bind(model);
         };
 
         // Inherit view methods
         View.prototype = Object.create(VineWhip.View.prototype);
 
-        View.prototype._modelTypeUid = o.model.constructor.prototype._typeUid;
+        // Have view remember Model type
+        View.prototype._modelCtor = o.model._modelCtor;
+        // TODO: doesn't work, it seems to o.model._modelCtor is undefined.
+
+        return View;
     };
 
     VineWhip.View.prototype.checkModelType = function(model) {
-        if (!(model._typeUid === this.constructor.prototype._modelTypeUid)) throw VineWhip.ModelMismatch;
+        console.log(model._modelCtor, this);
+
+        if (!(model._modelCtor === this.constructor._modelCtor)) throw VineWhip.ModelMismatch;
     };
 
     VineWhip.View.prototype.bind = function(model) {
+        this.checkModelType(model);        
         this.model = model;
     };
 
