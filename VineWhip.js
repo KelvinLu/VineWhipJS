@@ -10,14 +10,15 @@ var VineWhip = {};
         };
     };
 
-    VineWhip.ModelMismatch = VineWhip.UserException('Model mismatch');
+    VineWhip.ModelMismatch = new VineWhip.UserException('Model mismatch');
+    VineWhip.NotImplemented = new VineWhip.UserException('Not implemented');
 
     VineWhip.assertType = function(obj, ctor) {
-        if (!(obj && obj.constructor === ctor)) throw VineWhip.UserException(obj + ' is not ' + (typeof ctor));
+        if (!(obj && obj.constructor === ctor)) throw new VineWhip.UserException(obj + ' is not ' + (typeof ctor));
     };
 
     VineWhip.assertProperty = function(obj, prop) {
-        if (!(obj.hasOwnProperty(prop))) throw VineWhip.UserException(obj + ' is missing property ' + prop);
+        if (!(obj.hasOwnProperty(prop))) throw new VineWhip.UserException(obj + ' is missing property ' + prop);
     };
 
     // Utilities
@@ -64,7 +65,7 @@ var VineWhip = {};
 
     VineWhip.View = function(o) {
         VineWhip.assertType(o, Object);
-        VineWhip.assertProperty(o, 'model');
+        VineWhip.assertProperty(o, 'modelType');
         VineWhip.assertProperty(o, 'template');        
     
         // Create View constructor
@@ -76,16 +77,13 @@ var VineWhip = {};
         View.prototype = Object.create(VineWhip.View.prototype);
 
         // Have view remember Model type
-        View.prototype._modelCtor = o.model._modelCtor;
-        // TODO: doesn't work, it seems to o.model._modelCtor is undefined.
+        View.prototype._modelCtor = o.modelType;
 
         return View;
     };
 
     VineWhip.View.prototype.checkModelType = function(model) {
-        console.log(model._modelCtor, this);
-
-        if (!(model._modelCtor === this.constructor._modelCtor)) throw VineWhip.ModelMismatch;
+        if (!(model._modelCtor === this._modelCtor)) throw VineWhip.ModelMismatch;
     };
 
     VineWhip.View.prototype.bind = function(model) {
