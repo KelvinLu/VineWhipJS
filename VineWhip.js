@@ -27,6 +27,12 @@ var VineWhip = {};
         for (key in ext) if (ext.hasOwnProperty(key)) obj[key] = ext[key];
     };
 
+    VineWhip.objProto = function(obj, proto) {
+        protoMaker = function(_obj){ VineWhip.objExtend(this, _obj) };
+        protoMaker.prototype = proto;
+        return new protoMaker(obj);
+    };
+
 
 
     // Model factory
@@ -34,22 +40,15 @@ var VineWhip = {};
     VineWhip.Model = function(o) {
         VineWhip.assertType(o, Object);
 
-        modelProps = ['defaults'];
-        for (var i = modelProps.length - 1; i >= 0; i--) VineWhip.assertProperty(o, modelProps[i]);
-
         // Create Model constructor
         Model = function(fields) {
-            this._data = Object.create(Model.prototype._defaults);
-
-            if (fields) VineWhip.objExtend(this._data, fields);
+            if (fields) VineWhip.objExtend(this, fields);
         };
 
-        // Inherit Model methods
-        Model.prototype = Object.create(VineWhip.Model._objProto);
+        // Inherit Model default attrs and methods
+        Model.prototype = VineWhip.objProto(o.defaults || {}, VineWhip.Model._objProto);
 
-        // Define model defaults
-        Model.prototype._defaults = o.defaults || Object.prototype;
-
+        // Meta-info
         Model.prototype._modelCtor = Model;
 
         // Set specific Model methods
@@ -69,11 +68,11 @@ var VineWhip = {};
     VineWhip.Model._objProto.set = function(fields) {
         VineWhip.assertType(fields, Object);        
 
-        VineWhip.objExtend(this._data, fields);
+        VineWhip.objExtend(this, fields);
     };
 
     VineWhip.Model._objProto.get = function(key) {
-        return this._data[key];
+        return this[key];
     };
 
 
@@ -147,7 +146,7 @@ var VineWhip = {};
             try {
                 replacements[match[0]] = eval(expr).toString();
             } catch (e) {
-                throw new VineWhip.UserException("Bad expression evaluation: " + eval);
+                throw new VineWhip.UserException("Bad expression evaluation: " + eval + "\n" + e);
             }
         };
         for (tag in replacements) templateHTML = templateHTML.replace(tag, replacements[tag]);
