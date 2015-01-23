@@ -21,6 +21,8 @@ var VineWhip = {};
         if (!(obj.hasOwnProperty(prop))) throw new VineWhip.UserException(obj + ' is missing property ' + prop);
     };
 
+
+
     // Utilities
 
     VineWhip.objExtend = function(obj, ext) {
@@ -39,6 +41,9 @@ var VineWhip = {};
 
     VineWhip.Model = function(o) {
         VineWhip.assertType(o, Object);
+
+        modelProps = ['defaults'];
+        modelRequiredProps = [];
 
         // Create Model constructor
         Model = function(fields) {
@@ -82,8 +87,9 @@ var VineWhip = {};
     VineWhip.View = function(o) {
         VineWhip.assertType(o, Object);
 
-        viewProps = ['template'];
-        for (var i = viewProps.length - 1; i >= 0; i--) VineWhip.assertProperty(o, viewProps[i]);
+        viewProps = [];
+        viewRequiredProps = ['template'];
+        for (var i = viewProps.length - 1; i >= 0; i--) VineWhip.assertProperty(o, viewRequiredProps[i]);
     
         // Create View constructor
         View = function(model) {
@@ -154,7 +160,14 @@ var VineWhip = {};
         return templateHTML;
     };
 
+
+
     // Service factory
 
+
+
     // Controller factory
+
+
+
 })(VineWhip);
