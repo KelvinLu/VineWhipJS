@@ -35,7 +35,7 @@ var VineWhip = {};
         VineWhip.assertType(o, Object);
 
         modelProps = ['defaults'];
-        for (prop in modelProps) VineWhip.assertProperty(o, modelProps[prop]);
+        for (var i = modelProps.length - 1; i >= 0; i--) VineWhip.assertProperty(o, modelProps[i]);
 
         // Create Model constructor
         Model = function(fields) {
@@ -54,7 +54,7 @@ var VineWhip = {};
 
         // Set specific Model methods
         for (prop in o) {
-            if (o.hasOwnProperty(prop) && !(o in modelProps)) {
+            if (o.hasOwnProperty(prop) && (modelProps.indexOf(prop) != -1)) {
                 Model.prototype[prop] = o[prop];
             }
         };
@@ -72,7 +72,7 @@ var VineWhip = {};
         VineWhip.objExtend(this._data, fields);
     };
 
-    VineWhip.Model._objProto.get = function(field) {
+    VineWhip.Model._objProto.get = function(key) {
         return this._data[key];
     };
 
@@ -84,7 +84,7 @@ var VineWhip = {};
         VineWhip.assertType(o, Object);
 
         viewProps = ['template'];
-        for (prop in viewProps) VineWhip.assertProperty(o, viewProps[prop]);
+        for (var i = viewProps.length - 1; i >= 0; i--) VineWhip.assertProperty(o, viewProps[i]);
     
         // Create View constructor
         View = function(model) {
@@ -102,7 +102,7 @@ var VineWhip = {};
 
         // Set specific View methods
         for (prop in o) {
-            if (o.hasOwnProperty(prop) && !(o in viewProps)) {
+            if (o.hasOwnProperty(prop) && (viewProps.indexOf(prop) != -1)) {
                 View.prototype[prop] = o[prop];
             }
         };
@@ -131,23 +131,26 @@ var VineWhip = {};
     };
 
     VineWhip.View._objProto._renderTemplateHTML = function(model, templateHTML) {
-        lDelimiter = '{{';
-        rDelimiter = '}}';
+        valueRegExp = new RegExp('{%' + '\\s*([$A-Z_][0-9A-Z_$]*)\\s*' + '%}', 'ig');
+        evalRegExp = new RegExp('{!' + '\\s*(.*)\\s*' + '!}', 'ig');
 
-        valueRegExp = new RegExp(lDelimiter + '\s*([$A-Z_][0-9A-Z_$]*)\s*' + rDelimiter);
-        conditionalRegExp = new RegExp(lDelimiter + '\s*if\s*\(\s*(.*)\s*\?\s*(.*)\s*(?:\:\s*(.*))?\s*\)' + rDelimiter);
-
+        replacements = {};
         while (match = valueRegExp.exec(templateHTML)) {
             prop = match[1];
-            templateHTML = templateHTML.replace(match, (model.get(prop) || prop));
+            replacements[match[0]] = (model.get(prop).toString() || prop);
         };
+        for (tag in replacements) templateHTML = templateHTML.replace(tag, replacements[tag]);
 
-        while (match = conditionalRegExp.exec(templateHTML)) {
-            cond = match[1];
-            prop1 = match[2];
-            prop2 = match[3];
-            templateHTML = templateHTML.replace(match, (eval(cond) ? prop1 : (prop2 || prop1)));
+        replacements = {};
+        while (match = evalRegExp.exec(templateHTML)) {
+            expr = match[1];
+            try {
+                replacements[match[0]] = eval(expr).toString();
+            } catch (e) {
+                throw new VineWhip.UserException("Bad expression evaluation: " + eval);
+            }
         };
+        for (tag in replacements) templateHTML = templateHTML.replace(tag, replacements[tag]);
 
         return templateHTML;
     };
