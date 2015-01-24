@@ -74,6 +74,7 @@ var VineWhip = {};
         VineWhip.assertType(fields, Object);        
 
         VineWhip.objExtend(this, fields);
+        return this;
     };
 
     VineWhip.Model._objProto.get = function(key) {
@@ -94,6 +95,7 @@ var VineWhip = {};
         // Create View constructor
         View = function(model) {
             this.bind(model);
+            this._el = null;
         };
 
         // Inherit View methods
@@ -126,14 +128,18 @@ var VineWhip = {};
     VineWhip.View._objProto.bind = function(model) {
         this._checkModelType(model);
         this.model = model;
+        return this;
     };
 
     VineWhip.View._objProto.render = function() {
         el = document.createElement('div');
         el.innerHTML = this._renderTemplateHTML(this.model, this._templateHTML);
-
-        return el;
+        return this;
     };
+
+    VineWhip.View._objProto.elem = function() {
+        return this._el;
+    }
 
     VineWhip.View._objProto._renderTemplateHTML = function(model, templateHTML) {
         valueRegExp = new RegExp('{%' + '\\s*([$A-Z_][0-9A-Z_$]*)\\s*' + '%}', 'ig');
@@ -164,9 +170,19 @@ var VineWhip = {};
 
     // Service factory
 
+    VineWhip.Service = function(o) {
+        VineWhip.assertType(o, Object);
+
+    };
+
 
 
     // Controller factory
+
+    VineWhip.Controller = function(o) {
+        VineWhip.assertType(o, Object);
+
+    };
 
 
 
