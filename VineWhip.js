@@ -42,23 +42,28 @@ var VineWhip = {};
     VineWhip.Model = function(o) {
         VineWhip.assertType(o, Object);
 
-        modelProps = ['defaults'];
+        modelProps = ['defaults', 'initialize'];
         modelRequiredProps = [];
 
         // Create Model constructor
         Model = function(fields) {
             if (fields) VineWhip.objExtend(this, fields);
+
+            if (this.initialize) this.initialize();
         };
 
         // Inherit Model default attrs and methods
         Model.prototype = VineWhip.objProto(o.defaults || {}, VineWhip.Model._objProto);
+
+        // Set initalize function in meta info prototype, may be undefined
+        Model.prototype.initialize = o.initialize;
 
         // Meta-info
         Model.prototype._modelCtor = Model;
 
         // Set specific Model methods
         for (prop in o) {
-            if (o.hasOwnProperty(prop) && (modelProps.indexOf(prop) != -1)) {
+            if (o.hasOwnProperty(prop) && ((modelProps + modelRequiredProps).indexOf(prop) != -1)) {
                 Model.prototype[prop] = o[prop];
             }
         };
@@ -88,7 +93,7 @@ var VineWhip = {};
     VineWhip.View = function(o) {
         VineWhip.assertType(o, Object);
 
-        viewProps = [];
+        viewProps = ['initialize'];
         viewRequiredProps = ['template'];
         for (var i = viewProps.length - 1; i >= 0; i--) VineWhip.assertProperty(o, viewRequiredProps[i]);
     
@@ -96,20 +101,25 @@ var VineWhip = {};
         View = function(model) {
             this.bind(model);
             this._el = null;
+
+            if (this.initialize) his._initialize();
         };
 
         // Inherit View methods
         View.prototype = Object.create(VineWhip.View._objProto);
 
+        // Set initalize function in meta info prototype, may be undefined
+        View.prototype.initialize = o.initialize;
+
         // Have view remember Model type
-        View.prototype._modelCtor = o.modelType || false;
+        View.prototype._modelCtor = o.modelType;
 
         // Save View's template HTML
         View.prototype._templateHTML = o.template;
 
         // Set specific View methods
         for (prop in o) {
-            if (o.hasOwnProperty(prop) && (viewProps.indexOf(prop) != -1)) {
+            if (o.hasOwnProperty(prop) && ((viewProps + viewRequiredProps).indexOf(prop) != -1)) {
                 View.prototype[prop] = o[prop];
             }
         };
