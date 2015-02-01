@@ -12,6 +12,7 @@ var VineWhip = {};
 
     VineWhip.ModelMismatch = new VineWhip.UserException('Model mismatch');
     VineWhip.NotImplemented = new VineWhip.UserException('Not implemented');
+    VineWhip.BadArgs = new VineWhip.UserException('Bad arguments supplied');
 
     VineWhip.assertType = function(obj, ctor) {
         if (!(obj && obj.constructor === ctor)) throw new VineWhip.UserException(obj + ' is not ' + (typeof ctor));
@@ -78,14 +79,21 @@ var VineWhip = {};
 
     VineWhip.Model._objProto = {};
 
-    VineWhip.Model._objProto.set = function(fields) {
-        VineWhip.assertType(fields, Object);        
-
-        VineWhip.objExtend(this, fields);
+    VineWhip.Model._objProto.set = function(arg1, arg2) {
+        if (arg1 == 'string' || arg1 instanceof String) this._set_single(arg1, arg2);
+        else if (arg1.constructor == Object) this._set_obj(arg1);
+        else throw VineWhip.BadArgs;
 
         this._valueNotify();
-
         return this;
+    };
+
+    VineWhip.Model._objProto._set_obj = function(fields) {
+        VineWhip.objExtend(this, fields);
+    };
+
+    VineWhip.Model._objProto._set_single = function(field, value) {
+        this[field] = value;
     };
 
     VineWhip.Model._objProto.get = function(key) {
