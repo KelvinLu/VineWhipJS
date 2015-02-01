@@ -57,7 +57,7 @@ var VineWhip = {};
         };
 
         // Inherit Model default attrs and methods
-        Model.prototype = VineWhip.objExtend({}, VineWhip.Model._objProto);
+        Model.prototype = VineWhip.objProto({}, VineWhip.Model._objProto);
 
         // Set initalize function in meta info prototype, may be undefined
         Model.prototype.initialize = o.initialize;
@@ -98,10 +98,6 @@ var VineWhip = {};
 
     VineWhip.Model._objProto.get = function(key) {
         return this[key];
-    };
-
-    VineWhip.Model._objProto.toJSON = function() {
-        return this;
     };
 
     VineWhip.Model._objProto._registerView = function(view) {
