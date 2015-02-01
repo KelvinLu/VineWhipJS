@@ -49,6 +49,8 @@ var VineWhip = {};
         Model = function(fields) {
             if (fields) VineWhip.objExtend(this, fields);
 
+            this._viewListeners = [];
+
             if (this.initialize) this.initialize();
         };
 
@@ -79,11 +81,27 @@ var VineWhip = {};
         VineWhip.assertType(fields, Object);        
 
         VineWhip.objExtend(this, fields);
+
+        this._valueNotify();
+
         return this;
     };
 
     VineWhip.Model._objProto.get = function(key) {
         return this[key];
+    };
+
+    VineWhip.Model._objProto._registerView = function(view) {
+        this._viewListeners.push(view);
+    }; 
+
+    VineWhip.Model._objProto._unregisterView = function(view) {
+        i = this._viewListeners.indexOf(view);
+        if (i > -1) this._viewListeners.splice(i, 1);
+    }; 
+
+    VineWhip.Model._objProto._valueNotify = function() {
+        for (var i = this._viewListeners.length - 1; i >= 0; i--) this._viewListeners[i]._render();
     };
 
 
@@ -99,10 +117,10 @@ var VineWhip = {};
     
         // Create View constructor
         View = function(model) {
-            this.bind(model);
             this._el = null;
+            this.bind(model);
 
-            if (this.initialize) his._initialize();
+            if (this.initialize) this._initialize();
         };
 
         // Inherit View methods
@@ -138,18 +156,28 @@ var VineWhip = {};
     VineWhip.View._objProto.bind = function(model) {
         this._checkModelType(model);
         this.model = model;
+        this.model._registerView(this);
+
+        this._render();
         return this;
     };
 
-    VineWhip.View._objProto.render = function() {
-        el = document.createElement('div');
-        el.innerHTML = this._renderTemplateHTML(this.model, this._templateHTML);
-        return this;
+    VineWhip.View._objProto.destroy = function() {
+        this.model._unregisterView(this);
+
+        this._el.parentNode.removeChild(this._el);
+        this._el = null;
     };
 
     VineWhip.View._objProto.elem = function() {
         return this._el;
     }
+
+    VineWhip.View._objProto._render = function() {
+        this._el = document.createElement('div');
+        this._el.innerHTML = this._renderTemplateHTML(this.model, this._templateHTML);
+        return this;
+    };
 
     VineWhip.View._objProto._renderTemplateHTML = function(model, templateHTML) {
         valueRegExp = new RegExp('{%' + '\\s*([$A-Z_][0-9A-Z_$]*)\\s*' + '%}', 'ig');
